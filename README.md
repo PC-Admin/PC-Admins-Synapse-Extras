@@ -187,48 +187,7 @@ worker_pid_file: /etc/matrix-synapse/workers/federation_sender.pid
 worker_log_config: /etc/matrix-synapse/workers/federation_sender_log_config.yaml
 ```
 
-2) https://github.com/matrix-org/synapse/tree/develop/docs/systemd-with-workers/system move these files to /etc/systemd/system
-```
-$ cd /etc/systemd/system
-$ sudo wget https://raw.githubusercontent.com/matrix-org/synapse/develop/docs/systemd-with-workers/system/matrix-synapse-worker%40.service
-$ sudo wget https://raw.githubusercontent.com/matrix-org/synapse/develop/docs/systemd-with-workers/system/matrix-synapse.service
-$ sudo wget https://raw.githubusercontent.com/matrix-org/synapse/develop/docs/systemd-with-workers/system/matrix-synapse.target
-```
-
-3) Run systemctl daemon-reload to tell systemd to load the new unit files.
-```
-$ sudo systemctl daemon-reload
-```
-
-4) Run systemctl enable matrix-synapse.service. This will configure the synapse master process to be started as part of the matrix-synapse.target target.
-```
-$ sudo systemctl enable matrix-synapse.service
-Created symlink /etc/systemd/system/matrix-synapse.target.wants/matrix-synapse.service → /etc/systemd/system/matrix-synapse.service.
-```
-
-5) For each worker process to be enabled, run systemctl enable matrix-synapse-worker@<worker_name>.service. For each <worker_name>, there should be a corresponding configuration file /etc/matrix-synapse/workers/<worker_name>.yaml
-```
-$ sudo service matrix-synapse stop
-$ sudo systemctl enable matrix-synapse-worker@federation_sender.service
-Created symlink /etc/systemd/system/matrix-synapse.target.wants/matrix-synapse-worker@federation_sender.service → /etc/systemd/system/matrix-synapse-worker@.service.
-```
-
-6) Start all the synapse processes with systemctl start matrix-synapse.target
-```
-$ sudo systemctl start matrix-synapse.target
-$ sudo systemctl status matrix-synapse.target
-● matrix-synapse.target - Synapse parent target
-   Loaded: loaded (/etc/systemd/system/matrix-synapse.target; disabled; vendor preset: enabled)
-   Active: active since Tue 2020-05-19 16:21:42 AWST; 6s ago
-```
-
-7) Tell systemd and workers to start synapse on boot with:
-```
-$ sudo systemctl enable matrix-synapse.target
-Created symlink /etc/systemd/system/multi-user.target.wants/matrix-synapse.target → /etc/systemd/system/matrix-synapse.target.
-$ sudo systemctl enable matrix-synapse-worker@federation_sender.service
-Created symlink /etc/systemd/system/matrix-synapse.target.wants/matrix-synapse-worker@federation_sender.service → /etc/systemd/system/matrix-synapse-worker@.service.
-```
+For steps 2-7 please follow: https://github.com/matrix-org/synapse/tree/develop/docs/systemd-with-workers#set-up
 
 Edit homeserver.yaml to enable replication listeners and to stop federation from the main Synapse process:
 ```
@@ -263,6 +222,23 @@ $ sudo journalctl -e -u matrix-synapse-worker@federation_sender.service
 Be aware you'll be using new commands to stop/start these services: https://github.com/matrix-org/synapse/tree/develop/docs/systemd-with-workers#usage
 
 Congradulations you have your first Synapse worker configured!
+
+***
+## Moderate the service with the admin APIs
+
+You'll want to set a user account to 'server admin' so you can use their "access token" to have a play with the APIs: https://github.com/matrix-org/synapse/blob/master/docs/admin_api/user_admin_api.rst
+
+Here is a python script I made to simplify the usage of this API: https://github.com/PC-Admin/PC-Admins-Synapse-Moderation-Tool
+
+***
+## Backup the service.
+
+You'll need to backup the following:
+- Your Synapse database. https://www.postgresql.org/docs/9.1/backup-dump.html
+- Your Synapse media location, usually it's: /var/lib/matrix-synapse/media/*
+- Yout Synapse configuration files: /etc/matrix-synapse/*
+
+These are the same files/directories to copy when migrating your service as well.
 
 ***
 ## Tune Postgresql
