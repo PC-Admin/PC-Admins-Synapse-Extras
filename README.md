@@ -53,7 +53,7 @@ email:
    smtp_pass: "very-long-string"
    require_transport_security: false
 
-   notif_from: "Your Friendly %(app)s homeserver <noreply@example>"
+   notif_from: "Your Friendly %(app)s homeserver <noreply@example.org>"
 ```
 
 Restart Synapse:
