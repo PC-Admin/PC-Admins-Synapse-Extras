@@ -43,6 +43,8 @@ First create an account at your SES provider: https://signup.mailgun.com/new/sig
 Follow the prompts to register your server address.
 Updated DNS records 2xTXT, 2xMX, CNAME as instructed.
 
+You'll need to wait until your domain is verified and your account is no longer in 'sandbox' mode: https://app.mailgun.com/app/dashboard
+
 Edit homeserver.yaml like so:
 ```
 email:
