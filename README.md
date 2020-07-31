@@ -163,67 +163,11 @@ You should now see a lot of performance statistics and graphics in Graphana.
 ***
 ## Create your first Synapse worker
 
-Synapse workers outsource jobs from the main Synapse process, a 'federation_sender' is a good first worker to setup as it's simple and usually gives you an impressive speedup. You can read about other workers here: https://github.com/matrix-org/synapse/blob/develop/docs/workers.md
+Workers allow you to scale synapse horizontally and have other 'workers' offload tasks from the main synapse thread. If you're going to have >50-100 users this is important.
 
-In this example we are going to setup workers with systemd: https://github.com/matrix-org/synapse/tree/develop/docs/systemd-with-workers
+Redis support was added in v1.13.0 with it becoming the recommended method in v1.18.0. It replaced the old direct TCP connections (which is deprecated as of v1.18.0) to the main process. With Redis, rather than all the workers connecting to the main process, all the workers and the main process connect to Redis, which relays replication commands between processes.
 
-1) Configure worker files as specified.
-```
-$ sudo mkdir /etc/matrix-synapse/workers
-$ sudo chown matrix-synapse:nogroup /etc/matrix-synapse/workers
-$ sudo touch /etc/matrix-synapse/workers/federation_sender_log_config.yaml
-$ sudo touch /etc/matrix-synapse/workers/federation_sender.yaml
-$ sudo chown matrix-synapse:nogroup /etc/matrix-synapse/workers/federation_sender.yaml
-$ sudo nano /etc/matrix-synapse/workers/federation_sender.yaml
-```
-Add:
-```
-worker_app: synapse.app.federation_sender
-
-# The replication listener on the synapse to talk to.
-worker_replication_host: 127.0.0.1
-worker_replication_port: 9092
-#worker_replication_http_port: 9093
-
-worker_pid_file: /etc/matrix-synapse/workers/federation_sender.pid
-worker_log_config: /etc/matrix-synapse/workers/federation_sender_log_config.yaml
-```
-
-For steps 2-7 please follow: https://github.com/matrix-org/synapse/tree/develop/docs/systemd-with-workers#set-up
-
-Edit homeserver.yaml to enable replication listeners and to stop federation from the main Synapse process:
-```
-$ sudo nano /etc/matrix-synapse/homeserver.yaml
-```
-Edit in these lines:
-```
-listeners:
-
-# Replication Endpoints
-  # The TCP replication port
-  - port: 9092
-    bind_address: '127.0.0.1'
-    type: replication
-  # The HTTP replication port
-  - port: 9093
-    bind_address: '127.0.0.1'
-    type: http
-    resources:
-    - names: [replication]
-
-send_federation: False
-```
-
-Restart services and check their output:
-```
-$ sudo systemctl restart matrix-synapse.target
-$ sudo journalctl -e -u matrix-synapse
-$ sudo journalctl -e -u matrix-synapse-worker@federation_sender.service
-```
-
-Be aware you'll be using new commands to stop/start these services: https://github.com/matrix-org/synapse/tree/develop/docs/systemd-with-workers#usage
-
-Congradulations you have your first Synapse worker configured!
+For instructions to configure this see: https://github.com/matrix-org/synapse/blob/develop/docs/workers.md
 
 ***
 ## Moderate the service with the admin APIs
